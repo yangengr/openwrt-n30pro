@@ -13,7 +13,7 @@ jobs:
     runs-on: ubuntu-22.04
     steps:
       - name: Checkout
-        uses: actions/checkout@v4
+        uses: actions/checkout@v5
 
       - name: Fix dpkg lock & update apt
         run: |
@@ -54,7 +54,7 @@ jobs:
           make -j$(nproc) world
 
       - name: Upload firmware artifacts
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v5
         with:
           name: OpenWrt-N30Pro-Firmware
           path: openwrt/bin/targets/mediatek/filogic
