@@ -15,6 +15,14 @@ jobs:
       - name: Checkout
         uses: actions/checkout@v5
 
+      - name: Cache ccache
+        uses: actions/cache@v4
+        with:
+          path: ~/.ccache
+          key: ${{ github.repository }}-ccache-${{ github.sha }}
+          restore-keys: |
+            ${{ github.repository }}-ccache-
+
       - name: Fix dpkg lock & update apt
         run: |
           sudo rm -f /var/lib/apt/lists/lock
@@ -24,11 +32,22 @@ jobs:
 
       - name: Install basic build packages
         run: |
-          sudo apt-get install -y build-essential flex bison g++ gawk gcc-multilib g++-multilib gettext libncurses5-dev libssl-dev
+          sudo apt-get install -y build-essential flex bison g++ gawk gcc-multilib g++-multilib gettext libncurses5-dev libssl-dev ccache
 
       - name: Install python & file tools
         run: |
           sudo apt-get install -y python3 python3-pip python3-setuptools python3-dev rsync unzip wget git subversion libz-dev file
+
+      - name: Free disk space
+        run: |
+          sudo rm -rf /usr/share/dotnet /usr/local/lib/android /opt/ghc
+          sudo apt clean
+
+      - name: Setup ccache
+        run: |
+          ccache --set-config=max_size=5G
+          ccache --set-config=cache_dir=~/.ccache
+          echo "CCACHE_DIR=~/.ccache" >> $GITHUB_ENV
 
       - name: Download OpenWrt source
         run: |
@@ -51,6 +70,7 @@ jobs:
       - name: Build firmware
         run: |
           cd openwrt
+          export PATH="/usr/lib/ccache:$PATH"
           make -j$(nproc) world
 
       - name: Upload firmware artifacts
